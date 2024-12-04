@@ -131,29 +131,19 @@ def delete_customer(conn, customer_id):
         print(f"Ошибка удаления клиента: {e}")
 
 
-def find_customer(conn, first_name=None, last_name=None, email=None, phone=None):
+def find_customer(conn, first_name='%', last_name='%', email='%', phone='%'):
     try:
         with conn.cursor() as cur:
             query = """
                 SELECT c.id, c.first_name, c.last_name, c.email, array_agg(p.phone) AS phones
                 FROM customers c
                 LEFT JOIN phones p ON p.customer_id = c.id
-                WHERE TRUE
+                WHERE c.first_name ILIKE %s
+                AND c.last_name ILIKE %s
+                AND c.email ILIKE %s
+                AND p.phone ILIKE %s
             """
-            params = []
-
-            if first_name:
-                query += " AND c.first_name ILIKE %s"
-                params.append("%" + first_name + "%")
-            if last_name:
-                query += " AND c.last_name ILIKE %s"
-                params.append("%" + last_name + "%")
-            if email:
-                query += " AND c.email ILIKE %s"
-                params.append("%" + email + "%")
-            if phone:
-                query += " AND p.phone ILIKE %s"
-                params.append("%" + phone + "%")
+            params = [first_name, last_name, email, phone]
 
             cur.execute(query, params)
             results = cur.fetchall()
